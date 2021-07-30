@@ -32,7 +32,12 @@ app.get("/movies/", async (request, response) => {
         FROM movie;
     `;
   const movieArray = await db.all(getMovieNameQuery);
-  response.send(movieArray);
+  const responseMovieArray = movieArray.map((eachMovie) => {
+    return {
+      movieName: eachMovie.movie_name,
+    };
+  });
+  response.send(responseMovieArray);
 });
 
 //API 2
@@ -61,7 +66,13 @@ app.get("/movies/:movieId/", async (request, response) => {
         WHERE movie_id = ${movieId};
     `;
   const movieDetails = await db.get(getMovieQuery);
-  response.send(movieDetails);
+  const responseMovieDetails = {
+    movieId: movieDetails.movie_id,
+    directorId: movieDetails.director_id,
+    movieName: movieDetails.movie_name,
+    leadActor: movieDetails.lead_actor,
+  };
+  response.send(responseMovieDetails);
 });
 
 //API 4
@@ -98,17 +109,29 @@ app.get("/directors/", async (request, response) => {
         FROM director;
     `;
   const directorArray = await db.all(getDirectorsQuery);
-  response.send(directorArray);
+  const responseDirectorArray = directorArray.map((eachDirector) => {
+    return {
+      directorId: eachDirector.director_id,
+      directorName: eachDirector.director_name,
+    };
+  });
+  response.send(responseDirectorArray);
 });
 
 //API 7
 app.get("/directors/:directorId/movies/", async (request, response) => {
   const { directorId } = request.params;
   const getMovieNamesOfDirectorQuery = `
-        SELECT DISTINCT movie_name
-        FROM movie
-        WHERE director_id = ${directorId};
+        SELECT movie_name
+        FROM director
+        LEFT JOIN movie ON movie.director_id = director.director_id
+        WHERE director.director_id = ${directorId};
     `;
   const movieNames = await db.all(getMovieNamesOfDirectorQuery);
-  response.send(movieNames);
+  const responseMovieNames = movieNames.map((eachMovie) => {
+    return {
+      movieName: eachMovie.movie_name,
+    };
+  });
+  response.send(responseMovieNames);
 });
